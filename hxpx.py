@@ -6,11 +6,18 @@ import sys,time,os,re,json
 from pathlib import Path
 from playwright.sync_api import expect
 from  socket import gethostname
+import  pandas as pd
+
+f_md=Path("C:","Users","qllwx","Documents","人员名单dafd.xlsx")
+if not f_md.exists():
+    f_md="人员名单.xlsx"
+
 
 hostname=gethostname()
-headless=not(hostname in['B550M-K','localhost'])
+headless=not(hostname in['B550M-K','localhost','qllwx-PowerEdge-R730'])
 if os.getenv('headless')=='True':
     headless=True
+
 
 url={'login':'http://pt.hxpxw.net/login/login.init.do?otherPageName=sanming.html',
      'hxpx':'http://pt.hxpxw.net',
@@ -39,8 +46,14 @@ def login(page,sfzh):
     page.fill('input[name="loginName"]',sfzh)
     page.fill('input[name="password"]',password)  
     page.click('input[type="submit"]')
+    #page.on('系统提示', lambda dialog: dialog.accept())
+    try:
+        with page.expect_navigation():
+            page.locator("text=继续登录").click()
+    except:
+        pass
     time.sleep(8)
-    print(page.title())
+    print(page.title(),sfzh)
     assert '海峡人才培训平台' in page.title()
     context.storage_state(path=sfzh+'_login_hxpx.json')
     return page
@@ -64,7 +77,7 @@ def login_storage(browser,sfzh):
             accept_downloads=True)
     page = context.new_page()
     page.goto(url['home'])
-    time.sleep(2)
+    time.sleep(1)
     assert '海峡人才培训平台' in page.title()
     return page
 
@@ -85,11 +98,12 @@ def open_card(page,text):
     return page1
 
 def checkcode(id_number_str):
+    if len(id_number_str) != 18:
+        return False
     id_number_last= id_number_str.strip()[-1]
     id_number_str = id_number_str.strip()[:-1]   
     # 判断长度，如果不是 17 位，直接返回失败
-    if len(id_number_str) != 17:
-        return False
+    
     id_regex = '[1-9][0-9]{14}([0-9]{2}[0-9X])?'
     if not re.match(id_regex, id_number_str):
         return False
@@ -156,12 +170,122 @@ def do_learn(page):
 
 def get_dialog_inner_list(page):
     a=[]
+    time.sleep(3)
     #a=page.frame_locator("iframe").first.locator('ul.track-dialog-ctt').text_content().split('\n')  
     obj=page.frame_locator("iframe").first.locator('li.innercan.track-course-item')
-    obj.last.text_content().strip()   
+    #obj.last.text_content().strip()   
     for i in range(obj.count()):
         a.append(obj.nth(i).text_content().strip())   
     return a
+
+def answer_yc(page2):
+     # 1
+    page2.locator("text=✔ B 以人为核心 >> span").click()    
+    page2.locator("text=✔ D 绿色循环低碳发展 >> span").click()    
+    page2.locator("text=✔ D 共商共建共享 >> span").click()   
+    page2.locator("text=✔ A 二 >> span").click()    
+    page2.locator("text=✔ B 二 >> span").click()
+    #6 Click text=✔ C 开放包容 >> span
+    page2.locator("text=✔ C 开放包容 >> span").click()   
+    page2.locator("text=✔ D 专业化 >> span").click()  
+    page2.locator("text=✔ C 2035 >> span").click()    
+    page2.locator("text=✔ C 和平与发展 >> span").click()   
+    page2.locator("text=✔ D 改革创新 >> span").click()
+    # 11Click text=✔ B 1，1.5 >> span
+    page2.locator("text=✔ B 1，1.5 >> span").click()    
+    page2.locator("text=✔ A 概念验证阶段 >> span").click()   
+    page2.locator("text=✔ B 统筹推进基础设施建设 >> span").click()   
+    page2.locator("text=✔ A 0.3 >> span").click()   
+    page2.locator("text=✔ C 0.092 >> span").click()
+    # 16Click text=✔ B 混合分工 >> span
+    page2.locator("text=✔ B 混合分工 >> span").click()   
+    page2.locator("text=✔ A 35 >> span").click()    
+    page2.locator("text=✔ B 行业 >> span").click()   
+    page2.locator("text=✔ D 基础公共信息 >> span").click()   
+    page2.locator("text=✔ B 实体 >> span").click()
+    # Click text=A 京津冀协同发展 >> span
+    page2.locator("text=A 京津冀协同发展 >> span").click()   
+    page2.locator("text=B 长江经济带发展 >> span").click()   
+    page2.locator("text=C 粤港澳大湾区建设 >> span").click()
+    page2.locator("text=D 长三角一体化发展 >> span").click()    
+    page2.locator("text=E 推动黄河流域生态保护和高质量发展 >> span").click()
+    # Click text=A 粮 >> span
+    page2.locator("text=A 粮 >> span").click()
+    page2.locator("text=B 棉 >> span").click()
+    page2.locator("text=C 油 >> span").click()    
+    page2.locator("text=D 糖 >> span").click()
+    page2.locator("text=E 肉 >> span").click()
+    # Click text=A 全面提高对外开放水平 >> span
+    page2.locator("text=A 全面提高对外开放水平 >> span").click()    
+    page2.locator("text=B 完善外商投资准入前国民待遇加负面清单管理制度，有序扩大服务业对外开放 >> span").click()    
+    page2.locator("text=C 完善自由贸易试验区布局 >> span").click()   
+    page2.locator("text=D 稳慎推进人民币国际化，坚持市场驱动和企业自主选择 >> span").click()    
+    page2.locator("text=E 发挥好中国国际进口博览会等重要展会平台作用 >> span").click()
+    # Click text=A 高附加值的制造业 >> span
+    page2.locator("text=A 高附加值的制造业 >> span").click()    
+    page2.locator("text=B 高附加值的服务业 >> span").click()
+
+    page2.locator("text=A 完善规则、制度、法律 >> span").click()    
+    page2.locator("text=B 协调配套国家法律和地方法规 >> span").click()    
+    page2.locator("text=C 提升政策、法规的透明度 >> span").click()   
+    page2.locator("text=D 切换事中、事后的监管模式 >> span").click()
+    # Click text=A 亚洲基础设施投资银行 >> span
+
+    page2.locator("text=A 亚洲基础设施投资银行 >> span").click()  
+    page2.locator("text=B 金砖国家新开发银行 >> span").click() 
+    page2.locator("text=D 丝路基金 >> span").click()    
+    page2.locator("text=E 中非发展基金 >> span").click()
+    # Click text=A 继承和创新的关系 >> span
+
+    page2.locator("text=A 继承和创新的关系 >> span").click()
+    page2.locator("text=B 政府和市场的关系 >> span").click()
+    page2.locator("text=C 开放和自主的关系 >> span").click()
+    page2.locator("text=D 发展和安全的关系 >> span").click()
+    page2.locator("text=E 战略和战术的关系 >> span").click()
+
+    # Click text=A 国际教育中心、人才中心 >> span
+    page2.locator("text=A 国际教育中心、人才中心 >> span").click()
+    page2.locator("text=B 国际先进生产力中心、经济中心 >> span").click()
+    page2.locator("text=C 国际管理创新中心 >> span").click()
+    page2.locator("text=D 全球原始创新策源地 >> span").click()
+    page2.locator("text=E 国际文化中心、交流中心 >> span").click()
+
+    page2.locator("text=A 关键核心技术 >> span").click()
+    page2.locator("text=D 产业基础高级化和产业链现代化 >> span").click()
+
+    # Click text=A 经济发展取得新成效 >> span
+    page2.locator("text=A 经济发展取得新成效 >> span").click()
+    page2.locator("text=B 改革开放迈出新步伐 >> span").click()
+    page2.locator("text=C 社会文明程度得到新提高 >> span").click()
+    page2.locator("text=D 民生福祉达到新水平 >> span").click()
+    page2.locator("text=E 国家治理效能得到新提升 >> span").click()
+
+    page2.locator("text=1、根据本讲，深化农村改革，要健全城乡统一的建设用地市场，积极探索实施农村集体经营性建设用地入市制度。（2.5 分） ✔ A 正确 ✔ B 错误 >> span").nth(2).click()
+    # Click text=2、推动共建“一带一路”高质量发展，要坚持以政府为主体，以市场为导向，健全多元化投融资体系。（2.5 分） ✔ A 正确 ✔ B 错误 >> span >> nth=3
+    page2.locator("text=2、推动共建“一带一路”高质量发展，要坚持以政府为主体，以市场为导向，健全多元化投融资体系。（2.5 分） ✔ A 正确 ✔ B 错误 >> span").nth(3).click()
+    # Click text=3、根据本讲，“十四五”期间仍是我国宝贵的战略发展时期。（2.5 分） ✔ A 正确 ✔ B 错误 >> span >> nth=3   
+    page2.locator("text=3、根据本讲，“十四五”期间仍是我国宝贵的战略发展时期。（2.5 分） ✔ A 正确 ✔ B 错误 >> span").nth(2).click()
+    # Click text=4、根据本讲，只要企业所处行业不在负面清单就可以在自贸区注册登记。（2.5 分） ✔ A 正确 ✔ B 错误 >> span >> nth=3
+    page2.locator("text=4、根据本讲，只要企业所处行业不在负面清单就可以在自贸区注册登记。（2.5 分） ✔ A 正确 ✔ B 错误 >> span").nth(2).click()
+    # Click text=5、根据本讲，开放引进的外国投资者不利于我国供给侧结构性改革。（2.5 分） ✔ A 正确 ✔ B 错误 >> span >> nth=3
+    page2.locator("text=5、根据本讲，开放引进的外国投资者不利于我国供给侧结构性改革。（2.5 分） ✔ A 正确 ✔ B 错误 >> span").nth(3).click()
+    # Click text=6、根据本讲，世界贸易组织抵制双边自由贸易协定。（2.5 分） ✔ A 正确 ✔ B 错误 >> span >> nth=3
+    page2.locator("text=6、根据本讲，世界贸易组织抵制双边自由贸易协定。（2.5 分） ✔ A 正确 ✔ B 错误 >> span").nth(3).click()
+    # Click text=7、根据本讲，我国正在实行降低关税和主动扩大进口。（2.5 分） ✔ A 正确 ✔ B 错误 >> span >> nth=2
+    page2.locator("text=7、根据本讲，我国正在实行降低关税和主动扩大进口。（2.5 分） ✔ A 正确 ✔ B 错误 >> span").nth(2).click()
+    # Click text=8、十九届五中全会公报指出，我国已转向高质量发展阶段，发展不平衡不充分问题已经得到充分解决。（2.5 分） ✔ A 正确 ✔ B 错误 >> span >> nth=3
+    page2.locator("text=8、十九届五中全会公报指出，我国已转向高质量发展阶段，发展不平衡不充分问题已经得到充分解决。（2.5 分） ✔ A 正确 ✔ B 错误 >> span").nth(3).click()
+    # Click text=9、经济社会需求和科技供给的内在矛盾是两大驱动力。（2.5 分） ✔ A 正确 ✔ B 错误 >> span >> nth=2
+    page2.locator("text=9、经济社会需求和科技供给的内在矛盾是两大驱动力。（2.5 分） ✔ A 正确 ✔ B 错误 >> span").nth(2).click()
+    page2.locator("text=10、科学和技术要高度融合，要解决社会和经济发展当中的一些现实问题。（2.5分） ✔ A 正确 ✔ B 错误 >> span").nth(2).click()
+     # Click text=提交
+    page2.locator("text=提交").click()
+    # Click a:has-text("确定")
+    page2.locator("a:has-text(\"确定\")").click()
+    # Click text=查看结果
+    page2.locator("text=查看结果").click()
+
+
 
 def answer_page(page1):
     # Check input[name="score"] >> nth=4
@@ -307,48 +431,105 @@ def get_catalog_playing(page):
     return a
     
 def playing_catalog_item_no(page):
-    print('本节课题数：',page.locator('div.cl-catalog-item-sub').count()) 
-    item_count=page.locator("a.scormItem-no.cl-catalog-link.cl-catalog-link-sub.item-no").count()
+    time.sleep(5)
+    global Current_name
+    item_sub_count=page.locator('div.cl-catalog-item-sub').count()
+    if item_sub_count==0:
+        item_sub_count=page.frame_locator("iframe").first.locator("li.section-item").count()
+        item_count=item_sub_count -  page.frame_locator("iframe").first.locator("span.finish-tig-item").count() 
+        
+        for i in range(item_sub_count):
+            obj=page.frame_locator("iframe").first.locator("li.section-item").nth(i)
+            obj_text=obj.text_content()
+            print(Current_name,obj.text_content())
+            if '已完成' in obj_text:
+                continue
+            else:
+                obj.click()               
+                
+                try:
+                    do_playing(page)
+                except:
+                    time_text=obj_text.split()[-1]
+                    time_text=time_text.split(':')
+                    time_seconds=int(time_text[1])*60+int(time_text[2])
+                    print('等待播放时间：',time_seconds)
+                    time.sleep(time_seconds)
+
+        return
+    else:
+        item_count=page.locator("a.scormItem-no.cl-catalog-link.cl-catalog-link-sub.item-no").count()
+    print('本节课题数：',item_sub_count)     
     print('本节未完成课题数：',item_count)
     for j in range(item_count):
-        print(page.locator("a.scormItem-no.cl-catalog-link.cl-catalog-link-sub.item-no").first.text_content(),get_datetime())  #未完成课题
+        print(Current_name,page.locator("a.scormItem-no.cl-catalog-link.cl-catalog-link-sub.item-no").first.text_content(),get_datetime())  #未完成课题
         page.locator("a.scormItem-no.cl-catalog-link.cl-catalog-link-sub.item-no").first.click()
         headertext=page.locator("div >>nth=0").text_content().replace('（','').split()
         if len(headertext)>1:
             times=re.findall('\d+',headertext[1])
-        else:
-            times=[100,0]        
-        sec=(int(times[0])-int(times[1]))*60+30
-        print('延时',sec)            
+            print(Current_name,"观看时长不少于%s分钟,已经观看%s分钟"%(times[0],times[1]))
+            sec=(int(times[0])-int(times[1]))*60+30
+        else:            
+            try:                
+                duration_time=page.frame_locator("#iframe_aliplayer").locator("span.duration").text_content()
+                current_time=page.frame_locator("#iframe_aliplayer").locator("span.current-time").text_content()
+                d1=int(duration_time.split(':')[0])
+                d2=int(duration_time.split(':')[1])
+                c1=int(current_time.split(':')[0])
+                c2=int(current_time.split(':')[1])
+                sec=(d1-c1)*60-c2+d2
+                print(Current_name,"本节共需要时长%s,已播放%s，还需%s秒"%(duration_time,current_time,sec))                
+            except:
+                duration_time=60
+                current_time=0
+                print('没找到时长,默认为60分钟')
+                sec=60*60
+        print('播放时长%s秒'%sec)            
         delay_play(sec)  
 
 
 def learn_dialog_inner_list(page):
+    global Current_name
     a=get_dialog_inner_list(page)
     print(len(a))
+    if len(a)==0:
+        time.sleep(2)
+        try:
+            page.locator("button").first.click()
+        except:
+            pass
+        time.sleep(2)
+        print_zs(page)
+
+        return
+    a.sort(reverse=True)
     for i in a:  
-        print(i)      
+        print(Current_name,i)      
         #page1=open_popup_text(page,i)
         with page.expect_popup() as popup_info:
             page.frame_locator("iframe").first.locator("text="+i).click()            
         page1 = popup_info.value
         #print(get_datetime(),page1.locator('body').inner_html())
-        time.sleep(2)  
+        time.sleep(10)  
         
         if not page1.title()==i:
             page1.click('text='+'进入该课程')
             time.sleep(5)
         try:
             scormItem=get_catalog_playing(page1)
-            print(scormItem)
+            print(Current_name,scormItem)
         except:
             pass
         #print(get_section_list(page1))
         #current_time=page1.frame_locator("#aliPlayerFrame").locator('span.current-time').text_content()
         #print(current_time)
         headertext=page1.locator("div >>nth=0").text_content().replace('（','').split()
-        print(headertext[:2])
+        print(Current_name,headertext[:2])
         if headertext[0]=='关闭':
+            print(headertext)
+            if headertext[1]=='2021“十四五”大战略与2035远景〔三〕':
+                answer_yc(page1)
+                continue
             try:
                 answer_page(page1)
             except:
@@ -373,11 +554,12 @@ def learn_dialog_inner_list(page):
             continue                   
         #print(times,headertext)
         if times[0]==times[1]:            
-            print("已经完成",end='\n')           
+            print(Current_name,"已经完成",end='\n')           
             #page1.frame_locator("iframe").first.locator("text=关闭").click()
             page1.close()
             continue       
-        section=get_section_list(page1)        
+        section=get_section_list(page1)
+        section.sort(reverse=True)        
         for sect in section:
             do_play_section(page1,sect)
         page1.close()
@@ -385,16 +567,20 @@ def learn_dialog_inner_list(page):
 def do_play_section(page,sect=None):
     if sect:
         page.frame_locator("iframe").first.locator('div.section >> text='+sect[0]).last.click()
-        time.sleep(2)
+        time.sleep(3)
     do_playing(page)
 
 def delay_play(sec):
+    show_delay_time=os.getenv('show_delay_time')
     while sec>0:
         sec-=1
         time.sleep(1)
-        print('倒计时',sec,'秒',end='\r')
+        if show_delay_time:
+            print('倒计时',sec,'秒',end='\r')
 
 def do_playing(page):
+        global Current_name
+        show_delay_time=os.getenv('show_delay_time')
         plaing=True
         while plaing:
             time.sleep(1)
@@ -404,42 +590,91 @@ def do_playing(page):
             current_time=page.frame_locator("#aliPlayerFrame").locator('span.current-time').text_content()
             duration_time=page.frame_locator("#aliPlayerFrame").locator('span.duration').text_content()
             if  current_time==duration_time and current_time!='00:00':
-                print(get_datetime(),page.title(),'——>已经完成')
+                print(Current_name,get_datetime(),page.title(),'——>已经完成')
                 plaing=False
                 break
             else:
-                print(current_time,end='\r')
+                if show_delay_time=='True':
+                    print(current_time,end='\r')
         return 
             
         #time.sleep(waite_time+10)
         
 def get_section_list(page):
-    res=[]     
+    
+
+    res=[] 
+    time.sleep(2)    
     section_obj=page.frame_locator("iframe").first.locator('li.section-item')
     for i in range(section_obj.count()):
         section_title=section_obj.nth(i).locator('span.section-title').text_content().strip()
         second_line=section_obj.nth(i).locator('div.second-line').text_content().strip()
         res.append([section_title,second_line])       
     print(res)
+    r_res=[]    
     return res
 
-def print_(page):
-    print(page.title(),"正在打印")
+def print_zs(page):
+    for i in range( page.locator("button").count()):
+        page.locator("button").first.click()
+        time.sleep(2)
+
+    global Current_name
+    print(Current_name,"正在打印")
     with page.expect_popup() as popup_info:
         page.locator('text=证书打印').click()            
     page_print1 = popup_info.value    
-    time.sleep(10)
-    for row in range(page_print1.locator('text=打印证书').count()):
+    time.sleep(5)
+    page_print1.locator('text=已完成').click()
+    time.sleep(5)
+    #obj=page_print1.locator('div.list-p')
+    obj=page_print1.locator('text=打印证书')
+    list_count=obj.count()
+    if list_count==2:
+        print(Current_name,'全部学习完成')
+        #f_md_set_complete(sfzh)       
+    else:
+        print(Current_name,list_count,'完成学习')
+        
+        #return
+    #f_md_set_complete(sfzh)
+    obj=page_print1.locator('div.list-p')
+    for row in range(list_count):
+        title=obj.nth(row).locator('a').first.text_content().strip()
+        print(Current_name,title)
         with page_print1.expect_popup() as popup_info:
             page_print1.locator('text=打印证书').nth(row).click()            
         page_print2 = popup_info.value    
-        page_print2.locator('text=打印').click()
-        time.sleep(30)
+        time.sleep(5)
+        fn=Current_name+'_'+sfzh+"_"+title+".png"
+        #screenshot(page_print2,fn)
+        page_print2.screenshot(path=fn)
+        #page_print2.locator('text=打印').click()
+        #time.sleep(30)
         page_print2.close()
     page_print1.close()
-    print(page.title(),"打印完成")
+    print(Current_name,"打印完成")
+    f_md_set_complete(sfzh)
+
+def f_md_set_complete(sfzh):
+    df=pd.read_excel(f_md)
+    df.loc[df['身份证号']==sfzh,'标记']='complete'
+    df.to_excel(f_md,index=False)
+
+
+def save_sfzh_to_file(sfzh,name):    
+    df=pd.read_excel(f_md)
+    if sfzh in df['身份证号'].values:
+        pass
+    else:
+        df.loc[len(df.index)]=[name,sfzh,'是']
+        #df.loc[len(df.index)] = [value1, value2, value3, ...]
+        df.to_excel(f_md,index=False)
+
+
 
 if __name__ == '__main__':
+    global Current_name
     cwd=Path.cwd().name
     print(cwd,end='')
     if checkcode(cwd):
@@ -457,35 +692,58 @@ if __name__ == '__main__':
             else:
                 if sfzh.upper()=='ALL':
                     import  pandas as pd
-                    df=pd.read_excel(Path('..','教育局人员.xlsx'))
+                    df=pd.read_excel(f_md)
                     df=df[df['标记']=='是']
                     sfzh=df['身份证号'].tolist()[randint(0,len(df)-1)]
                     print('随机身份证号为',sfzh,df[df['身份证号']==sfzh]['姓名'],'\n')
-                    os.environ.setdefault('sfzh',sfzh)
+                    os.environ.setdefault('sfzh',str(sfzh))
                 else:
-                    print('身份证号不正确')
+                    print(sfzh,'身份证号不正确')
                     sys.exit()
+   
     login_storage_file=os.environ['sfzh']+'_login_hxpx.json'
     if Path(login_storage_file).exists():
         page2=login_storage(browser,sfzh)
     else:
         page=context.new_page()
-        page2=login(page,sfzh)
+        page2=login(page,str(sfzh))
     #问候语 及完成学时数
+    time.sleep(1)
     tips_title=page2.locator('div.tips-title.line-over').text_content()
-    print(tips_title)    
-    print(page2.locator("a.desc-wrap").last.text_content()) 
-    line_over=page2.locator("h4.line-over").count()
-    for row in range(line_over):
-        text=page2.locator("h4.line-over").first.text_content()
-        print(text)
-        if '2022' in text:
-            page2.locator("h4.line-over ").first.click()
-            learn_dialog_inner_list(page2)
-    page2.goto(url['hxpx'])
-    print_(page2)
-
+    Current_name=tips_title.split('，')[1]
+    print(tips_title,sfzh)
+    print(Current_name,page2.locator("a.desc-wrap").last.text_content()) 
+    complete_xs=page2.locator("a.desc-wrap>>p").last.text_content().split('.')[0]
+    if int(complete_xs)>89:
+        print(Current_name,'已完成学时',get_datetime())
+        if os.getenv('hxpx_print')=="True":
+            print_zs(page2)
+        page2.close()
+        f_md_set_complete(sfzh)
+        sys.exit()
+    if page2.locator("img[alt=\"关闭\"]").count()>0:
+        page2.locator("img[alt=\"关闭\"]").first.click()
     
+    
+    save_sfzh_to_file(sfzh,Current_name)    
+    
+    
+    line_over=page2.locator("h4.line-over").count()
+    if line_over==0:
+        f_md_set_complete(sfzh)    
+
+    for row in range(line_over):
+        text=page2.locator("h4.line-over").nth(row).text_content()
+        print(Current_name,text)
+        if '2022' in text:
+            obj=page2.locator("h4.line-over ")
+            print(Current_name,obj.count(),obj.nth(row).inner_text())
+            obj.nth(row).click()
+            time.sleep(2)
+            learn_dialog_inner_list(page2)
+    f_md_set_complete(sfzh)  
+    page2.goto(url['hxpx'])
+    print_zs(page2)    
     page2.close()
     browser.close()
     '''
