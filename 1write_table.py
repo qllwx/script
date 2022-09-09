@@ -4,6 +4,9 @@ from tqdm import tqdm
 import pandas as pd
 import sys
 
+name_str="谢家冬"
+date_str="填表时间：2022年9月  日"
+
 doc='''
 \n本文件为家冬专用Python源程序。在powershell等命令行提示符后输入python 
 说明：程序文件名中的第1个字符为\n
@@ -41,7 +44,7 @@ def copy_range(worksheet,source_range="B11:B25",target_range="C11:C25"):
         idx+=1
     return worksheet
 
-def write_end(filename,name_str="谢家冬",name_range="B29",date_str="填表时间：2022年9月  日",date_range="C29",data_dir='.\data'):
+def write_end(filename,name_str=name_str,name_range="B29",date_str=date_str,date_range="C29",data_dir='.\data'):
     base_name=Path(filename).name.split(".")[0]
     write_filename=Path(data_dir,base_name,Path(filename).name)
     if write_filename.exists():
